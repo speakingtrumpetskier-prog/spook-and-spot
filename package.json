@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && cd dist && touch .nojekyll && (git rev-parse --git-dir > /dev/null 2>&1 || (git init -b gh-pages && git remote add origin https://github.com/speakingtrumpetskier-prog/spook-and-spot.git)) && git add -A && git -c user.email=deploy@local -c user.name=deploy commit --allow-empty -m \"deploy\" && git push -f origin HEAD:gh-pages"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
