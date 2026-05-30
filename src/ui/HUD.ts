@@ -130,5 +130,5 @@ export function drawHUD(ctx: CanvasRenderingContext2D, game: Game): void {
   ctx.fillStyle = "rgba(200, 220, 180, 0.4)";
   ctx.font = "10px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("WASD move · Shift crouch · Space stand still · RMB binoculars · E identify · LMB photo · 1-4 calls · TAB notebook", w / 2, h - 4);
+  ctx.fillText("WASD move · Shift crouch · Space stand still · E binoculars · aim & hold on a bird to ID/photo · 1-4 calls · TAB notebook", w / 2, h - 4);
 }

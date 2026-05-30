@@ -307,41 +307,31 @@ export class Game {
     }
     this.watcherScore.tickEvent(dt);
 
-    // Trigger ID quiz on E
-    if (this.input.wasPressed("e") && this.binoculars.targetedBird && !this.quiz.active) {
-      const bird = this.binoculars.targetedBird;
-      // Auto-ID if already learned twice
-      if (this.watcherScore.autoIded.has(bird.species.id) && !bird.idedByWatcher) {
-        this.watcherScore.recordSpot(bird, this.time, bird.species.pointsWatch);
-        sound.playUI("spot");
-      } else if (!bird.idedByWatcher) {
-        if (this.quiz.start(bird)) {
-          (this as any).__lastQuizBird = bird;
+    // Auto-identify: holding focus on an un-IDed bird triggers the ID (no click)
+    const focusBird = this.binoculars.targetedBird;
+    if (focusBird && !this.quiz.active) {
+      if (!focusBird.idedByWatcher && this.binoculars.readyToId) {
+        if (this.watcherScore.autoIded.has(focusBird.species.id)) {
+          // Already learned this species twice — instant spot, no quiz
+          this.watcherScore.recordSpot(focusBird, this.time, focusBird.species.pointsWatch);
+          sound.playUI("spot");
+        } else if (this.quiz.start(focusBird)) {
+          (this as any).__lastQuizBird = focusBird;
           sound.playUI("spot");
         }
-      }
-    }
-
-    // Photo on LMB while bino up — needs >= 1.0s photo lock
-    if (this.input.mousePressed.left && this.binoculars.mode === "on" && this.binoculars.targetedBird) {
-      const b = this.binoculars.targetedBird;
-      if (this.binoculars.photoLockTime >= 1.0) {
-        this.binoculars.photoFlash = 0.9;
-        this.binoculars.photoLockTime = 0;
-        sound.playUI("shutter");
-        // Photo bonus +1.5x next ID; for now, if already IDed, give a bonus
-        if (b.idedByWatcher) {
-          const entry = this.watcherScore.notebook.get(b.species.id);
-          if (entry && !entry.photographed) {
-            entry.photographed = true;
-            const bonus = Math.round(b.species.pointsWatch * 0.5);
-            this.watcherScore.total += bonus;
-            this.watcherScore.lastEvent = { text: `${b.species.name} 📷 +${bonus} (photo)`, points: bonus, ttl: 2.5 };
-          }
-        } else {
-          // First-spot via photo: count as a slow ID with photo bonus
-          this.watcherScore.recordSpot(b, this.time, b.species.pointsWatch, true);
+        this.binoculars.resetAfterId();
+      } else if (focusBird.idedByWatcher && this.binoculars.readyToPhoto) {
+        // Auto-photograph an already-identified bird for a bonus
+        const entry = this.watcherScore.notebook.get(focusBird.species.id);
+        if (entry && !entry.photographed) {
+          entry.photographed = true;
+          this.binoculars.photoFlash = 0.9;
+          sound.playUI("shutter");
+          const bonus = Math.round(focusBird.species.pointsWatch * 0.5);
+          this.watcherScore.total += bonus;
+          this.watcherScore.lastEvent = { text: `${focusBird.species.name} 📷 +${bonus} (photo)`, points: bonus, ttl: 2.5 };
         }
+        this.binoculars.resetAfterPhoto();
       }
     }
 
@@ -361,16 +351,9 @@ export class Game {
       this.baseZoom *= this.input.wheel < 0 ? 1.1 : 0.9;
       this.baseZoom = Math.max(1.2, Math.min(3.0, this.baseZoom));
     }
-    // Camera follows player normally; aim drift when binos up
-    if (this.binoculars.mode === "on" || this.binoculars.mode === "raising") {
-      const aimWorld = {
-        x: this.player.pos.x + this.binoculars.aimOffset.x * 0.4,
-        y: this.player.pos.y + this.binoculars.aimOffset.y * 0.4,
-      };
-      this.camera.follow(aimWorld);
-    } else {
-      this.camera.follow(this.player.pos);
-    }
+    // Camera stays locked on the player (even while glassing) so birds don't
+    // drift out from under the reticle. You sweep the reticle, not the camera.
+    this.camera.follow(this.player.pos);
     // Effective zoom = base * bino boost (decays smoothly with binoculars.zoomBoost)
     this.camera.zoom = this.baseZoom * this.binoculars.zoomBoost;
     this.camera.update(dt);

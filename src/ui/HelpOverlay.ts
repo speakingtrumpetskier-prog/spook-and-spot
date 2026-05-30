@@ -26,11 +26,12 @@ export function drawHelpOverlay(ctx: CanvasRenderingContext2D, ttl: number): voi
   ctx.fillText("Loring Park birding · practice match (10:00)", w / 2, cy + 48);
 
   const lines = [
-    ["RMB", "raise binoculars · zoom & track"],
-    ["E", "identify the targeted bird (1-4 to answer)"],
-    ["LMB", "photograph (hold target steady ~1s)"],
+    ["E", "raise / lower binoculars"],
+    ["move pad", "aim the reticle"],
+    ["hold on bird", "auto-identifies, then 1-4 to answer"],
+    ["keep holding", "auto-photographs (after ID)"],
     ["1 – 4", "play bird calls (30s cooldown)"],
-    ["WASD", "move · Shift to crouch · Space to stand still"],
+    ["WASD", "move · Shift crouch · Space stand still"],
     ["TAB", "open field notebook"],
   ];
   ctx.textAlign = "left";
